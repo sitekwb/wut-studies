@@ -7,7 +7,7 @@ extern "C" {
     char codes[32*256], tab[8*512];
     //encode
     void count(FILE *inputFile_, char *tab_);
-    void huffman(FILE *inputFile_, char *tab_);
+    void huffman(char *tab_);
     //void createCodes(char *tab_, char *codes_);
     //void writeHeader(char *tab_, char *codes_);
     //void write(FILE *inputFile_, FILE *outputFile_, char *tab_, char *codes_);
@@ -43,7 +43,7 @@ int main(int argc, char** argv){
     if(encodeFlag){
        	count(inputFile, tab);
         testCount();
-	void huffman(inputFile, tab);
+	void huffman(tab);
         //void createCodes(tab, codes);
         //void writeHeader(tab, codes);
         //void write(inputFile, outputFile, tab, codes);
