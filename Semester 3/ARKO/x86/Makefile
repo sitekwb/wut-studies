@@ -7,11 +7,11 @@ AFLAGS=-f elf32
 all:result
 
 main.o: main.c
-	$(CC) $(CFLAGS) -c main.c
-func.o: func.asm
-	$(ASM) $(AFLAGS) func.asm
-result: main.o func.o
-	$(CC) $(CFLAGS) main.o func.o -o result
+	$(CC) $(CFLAGS) -g -c main.c
+count.o: count.asm
+	$(ASM) $(AFLAGS) -g count.asm
+result: main.o count.o
+	$(CC) $(CFLAGS) main.o count.o -o result
 clean: 
 	rm *.o
 	rm result
