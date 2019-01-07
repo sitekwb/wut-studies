@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-m32
 
 ASM=nasm
-AFLAGS=-f elf64
+AFLAGS=-f elf32
 
 all:result
 

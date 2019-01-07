@@ -7,10 +7,10 @@ extern "C" {
     char codes[32*256], tab[8*512];
     //encode
     void count(FILE *inputFile_, char *tab_);
-    void huffman(FILE *inputFile_, char *tab_);
-    void createCodes(char *tab_, char *codes_);
-    void writeHeader(char *tab_, char *codes_);
-    void write(FILE *inputFile_, FILE *outputFile_, char *tab_, char *codes_);
+    //void huffman(FILE *inputFile_, char *tab_);
+    //void createCodes(char *tab_, char *codes_);
+    //void writeHeader(char *tab_, char *codes_);
+    //void write(FILE *inputFile_, FILE *outputFile_, char *tab_, char *codes_);
 #ifdef __cplusplus
 }
 #endif
@@ -32,11 +32,11 @@ int main(int argc, char** argv){
     int encodeFlag;
     scanf("%d", &encodeFlag);
     if(encodeFlag){
-        void count(inputFile, tab);
+       	count(inputFile, tab);
         //test [count(4B)][parent(2B)][flag(1B)][bitCountInCode(1B)]
         printf("count--parent--flag--bit");
         for(int i=0; i<256; ++i){
-            printf("%5d--%6hd--%4d--%3d\n", 
+            printf("%5d--%6hd--%4d--%3d\n", tab[8*i], tab[8*i+4], tab[8*i+6], tab[8*i+7]); 
         }
         //void huffman(inputFile, tab);
         //void createCodes(tab, codes);

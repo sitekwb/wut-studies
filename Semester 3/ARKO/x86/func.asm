@@ -17,30 +17,30 @@ global  count
 count:
 	push	ebp
 	mov	    ebp,    esp
-    push DWORD ebp+8            ; ebp-4 = *file
+    	push DWORD[ebp+8]            ; ebp-4 = *file
 
-    mov ebx, [ebp+12]           ; ebx = tab
+    	mov ebx, [ebp+12]           ; ebx = tab
 loop:
 
 ; get sign
-    call fgetc                  ; eax = sign
+   	 call fgetc                  ; eax = sign
 
 ; if(EOF) break;
-    test eax, EOF
-    je epilog
+    	test eax, EOF
+	je epilog
 
 ; tab[sign].count++
-    lea ecx, [ebx+8*eax]        ; ecx = tab[sign].count
-    mov edx, [ecx]
-    inc edx
-    mov [ecx], edx
+    	lea ecx, [ebx+8*eax]        ; ecx = tab[sign].count
+    	mov edx, [ecx]
+    	inc edx
+    	mov [ecx], edx
 ; tab[sign].parent = ROOT
-mov WORD [ecx + 4], ROOT
+	mov WORD [ecx + 4], ROOT
 
-jmp loop
+	jmp loop
 
 epilog:
-    pop eax                     ; pop *file
+    	pop 	eax                     ; pop *file
 	pop	ebp
 	ret
 
