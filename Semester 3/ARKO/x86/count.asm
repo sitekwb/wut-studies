@@ -6,7 +6,7 @@
 ;   tab[sign].parent = ROOT; (2)
 ; }
 
-ROOT equ 2
+ROOT equ 0xFFFF 
 EOF equ -1
 
 extern fgetc

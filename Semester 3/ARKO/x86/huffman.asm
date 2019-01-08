@@ -53,8 +53,9 @@ huffman:
 huffman_loop:
 
 ;	int min = MAX, minest = MAX, minIndex = MAX, minestIndex = MAX;
-    	lea ecx, DWORD[ebp+8]        	; ecx = sign
-	lea edx, ebx+8*256		; edx = finishSign
+    	mov ecx, DWORD[ebp+8]        	; ecx = &sign
+	mov edx, ecx
+	add edx, 8*256			; edx = finishSign
 	push DWORD MAX			; EBP-4 = MIN
 	push DWORD MAX			; EBP-8 = MINEST
 	push DWORD MAX			; EBP-12 = minIndex
@@ -62,21 +63,21 @@ huffman_loop:
 
 ;	for(char sign: tab1){
 	sub ecx, 8
-loop:
+lop:
 	add ecx, 8
 	cmp ecx, edx
 	je loop2_init
 ;		if( tab[sign].parent == ROOT ){
 	lea eax, [ecx+4]
 	cmp eax, ROOT
-	jne loop
+	jne lop
 ;			if( tab[sign].count < min ){
-	lea eax, DWORD[ecx]						; eax = tab[sign].count
-	lea ebx, DWORD[ebp-4]
+	mov eax, DWORD[ecx]						; eax = tab[sign].count
+	mov ebx, DWORD[ebp-4]
 	cmp eax, ebx
-	jge loop
+	jge lop
 ;				if( tab[sign].count < minest ){
-	lea ebx, DWORD[ebp-8]
+	mov ebx, DWORD[ebp-8]
 	cmp eax, ebx
 	jge change_min
 ;					min = minest;
@@ -90,7 +91,7 @@ loop:
 ;					minestInd = sign;
 	mov DWORD[ebp-16], ecx
 ;				}
-	jmp loop
+	jmp lop
 ;				else{
 change_min:
 ;					min = tab[sign].count;
@@ -98,7 +99,7 @@ change_min:
 ;					minInd = sign;
 	mov DWORD[ebp-12], ecx
 ;				}
-	jmp loop
+	jmp lop
 ;			}
 ;		}
 ;	}
@@ -113,7 +114,7 @@ loop2:
 	cmp ecx, edx
 	je finish
 ;		if( tab[sign].count == 0 ){
-	lea ebx, DWORD[ecx]						; ebx = tab[sign].count
+	mov ebx, DWORD[ecx]						; ebx = tab[sign].count
 	test ebx, ebx
 ;			break;
 ;		}
@@ -125,11 +126,11 @@ loop2:
 
 ;			if( tab[sign].count < min ){
 	mov eax, ebx							; eax = tab[sign].count
-	lea ebx, DWORD[ebp-4]
+	mov ebx, DWORD[ebp-4]
 	cmp eax, ebx
 	jge loop2
 ;				if( tab[sign].count < minest ){
-	lea ebx, DWORD[ebp-8]
+	mov ebx, DWORD[ebp-8]
 	cmp eax, ebx
 	jge change_min2
 ;					min = minest;
@@ -175,18 +176,18 @@ finish:
 	mov DWORD[ecx], eax
 
 ;	tab[ind].parent = ROOT;
-	lea WORD[ecx+4], ROOT
+	mov WORD[ecx+4], ROOT
 
 ;	tab[minest].parent = ind;
-	lea ebx, DWORD[ebp+8]		; ebx = tab
+	mov ebx, DWORD[ebp+8]		; ebx = tab
 	sub ecx, ebx
 	shr ecx, 3
 	
 	pop eax
-	lea WORD[eax+4], ecx
+	mov WORD[eax+4], cx 
 ;	tab[min].parent = ind;
 	pop eax
-	lea WORD[eax+4], ecx
+	mov WORD[eax+4], cx 
 ;}while(true)
 	pop eax
 	pop eax

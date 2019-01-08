@@ -15,7 +15,7 @@ extern "C" {
 }
 #endif
 
-void testiCount(){
+void test(){
         //test [count(4B)][parent(2B)][flag(1B)][bitCountInCode(1B)]
         printf("code---count--parent--flag--bit\n");
 	for(int i=0; i<256; ++i){
@@ -42,8 +42,10 @@ int main(int argc, char** argv){
     scanf("%d", &encodeFlag);
     if(encodeFlag){
        	count(inputFile, tab);
-        testCount();
-	void huffman(tab);
+        test();
+	huffman(tab);
+        printf("----HUFFMAN TEST-----\n");
+	test();
         //void createCodes(tab, codes);
         //void writeHeader(tab, codes);
         //void write(inputFile, outputFile, tab, codes);
