@@ -1,5 +1,7 @@
 ; EBP+8  = FILE *inputFile
 ; EBP+12 = char *tab [count(4B)][parent(2B)][flag(1B)][bitCountInCode(1B)]
+; EBP+16 = FILE *outputFile
+; EBP+20 = char *codes
 
 ; for(char sign: input){
 ;   tab[sign].count++;
@@ -13,6 +15,8 @@ extern fgetc
 
 section	.text
 global  count
+extern test
+extern huffman
 
 count:
 	push	ebp
@@ -27,7 +31,7 @@ loop:
 
 ; if(EOF) break;
     	cmp eax, -1 
-	je epilog
+	je epilog 
 
 ; tab[sign].count++
     	lea ecx, [ebx+8*eax]        ; ecx = tab[sign].count
@@ -38,12 +42,10 @@ loop:
 	mov WORD [ecx + 4], ROOT
 
 	jmp loop
-
 epilog:
-    	pop 	eax                     ; pop *file
-	pop	ebp
-	ret
-
+	pop eax
+	call test
+	jmp huffman
 ;============================================
 ; STOS
 ;============================================

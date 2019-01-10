@@ -1,4 +1,7 @@
-; EBP+8 = char *tab [count(4B)][parent(2B)][flag(1B)][bitCountInCode(1B)]
+; EBP+8  = FILE *inputFile #NOTUSED
+; EBP+12 = char *tab [count(4B)][parent(2B)][flag(1B)][bitCountInCode(1B)]
+; EBP+16 = FILE *outputFile #NOTUSED
+; EBP+20 = char *codes #NOTUSED
 
 ;do{
 ;	//searchMin
@@ -48,16 +51,13 @@ MAX  equ 0xFFFFFFFF ; 4B
 
 section	.text
 global huffman 
-
-huffman:
-	push ebp
-	mov ebp, esp
+extern test
 
 ;do{
-huffman_loop:
+huffman:
 
 ;	int min = MAX, minest = MAX, minIndex = MAX, minestIndex = MAX;
-    	mov ecx, DWORD[ebp+8]        	; ecx = &sign
+    	mov ecx, DWORD[ebp+12]        	; ecx = &sign
 	mov edx, ecx
 	add edx, 8*256			; edx = finishSign
 	push DWORD MAX			; EBP-4 = MIN
@@ -72,18 +72,22 @@ lop:
 	cmp ecx, edx
 	je loop2_init
 ;		if( tab[sign].parent == ROOT ){
-	lea eax, [ecx+4]
-	cmp eax, ROOT
+	mov ax, WORD[ecx+4]
+	cmp ax, ROOT
+check_if_root:
 	jne lop
+is_root:	;TODO delete
 ;			if( tab[sign].count < min ){
 	mov eax, DWORD[ecx]						; eax = tab[sign].count
 	mov ebx, DWORD[ebp-4]
 	cmp eax, ebx
-	jge lop
+	jae lop
+is_smaller:	;TODO delete
 ;				if( tab[sign].count < minest ){
 	mov ebx, DWORD[ebp-8]
 	cmp eax, ebx
-	jge change_min
+	jae change_min
+is_smallest:	;TODO delete
 ;					min = minest;
 	mov ebx, DWORD[ebp-8]
 	mov DWORD[ebp-4], ebx
@@ -183,29 +187,31 @@ finish:
 	mov WORD[ecx+4], ROOT
 
 ;	tab[minest].parent = ind;
-	mov ebx, DWORD[ebp+8]		; ebx = tab
+	mov ebx, DWORD[ebp+12]		; ebx = tab
 	sub ecx, ebx
 	shr ecx, 3
-	
 	pop eax
 	mov WORD[eax+4], cx 
-;	tab[minest].flag = 1;
-	mov BYTE[eax+6], 1
+;	tab[minest].flag = 0;
+	mov BYTE[eax+6], 0
 ;	tab[min].parent = ind;
 	pop eax
 	mov WORD[eax+4], cx 
-;	tab[min].flag = 0;
-	mov BYTE[eax+6], 0
+;	tab[min].flag = 1;
+	mov BYTE[eax+6], 1
 ;}while(true)
 	pop eax
 	pop eax
-	jmp huffman_loop
+	jmp huffman
 epilog:
     	pop 	eax	; ebp-16
 	pop	eax	; ebp-12
 	pop	eax	; ebp-8
 	pop	eax	; ebp-4
 	
+	call test
+
+	mov esp, ebp	
 	pop ebp
 	ret
 
