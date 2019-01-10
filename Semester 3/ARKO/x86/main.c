@@ -42,13 +42,16 @@ int main(int argc, char** argv){
     scanf("%d", &encodeFlag);
     if(encodeFlag){
        	count(inputFile, tab);
-        test();
+        printf("----COUNT TEST-----\n");
+	test();
+	
 	huffman(tab);
         printf("----HUFFMAN TEST-----\n");
 	test();
-        //void createCodes(tab, codes);
-        //void writeHeader(tab, codes);
-        //void write(inputFile, outputFile, tab, codes);
+        
+	createCodes(tab, codes);
+        //writeHeader(tab, codes);
+        //write(inputFile, outputFile, tab, codes);
     }
     else{
         //TODO decoding

@@ -33,6 +33,10 @@
 ;	short ind = sign;
 ;	tab[ind].count = min + minest;
 ;	tab[ind].parent = ROOT;
+;	
+;	tab[min].flag = 0;
+;	tab[minest].flag = 1;
+;
 ;	tab[min].parent = ind;
 ;	tab[minest].parent = ind;
 ;}while(true)
@@ -120,8 +124,8 @@ loop2:
 ;		}
 	jz finish
 ;		else if( tab[sign].parent == ROOT){
-	lea eax, [ecx+4]
-	cmp eax, ROOT
+	mov ax, WORD[ecx+4]
+	cmp ax, ROOT
 	jne loop2
 
 ;			if( tab[sign].count < min ){
@@ -156,7 +160,7 @@ change_min2:
 ;			}
 ;		}
 finish:
-;	if(minIndex == MAX){
+;	if(min == MAX){
 ;		break;//huffman ready
 ;	}
 	mov eax, DWORD[ebp-4]
@@ -170,7 +174,7 @@ finish:
 ;	short ind = sign;
 						; ecx = tab[ind]
 ;	tab[ind].count = min + minest;
-	mov eax, DWORD[ebp-4]
+	;mov eax, DWORD[ebp-4]
 	mov ebx, DWORD[ebp-8]
 	add eax, ebx
 	mov DWORD[ecx], eax
@@ -185,16 +189,24 @@ finish:
 	
 	pop eax
 	mov WORD[eax+4], cx 
+;	tab[minest].flag = 1;
+	mov BYTE[eax+6], 1
 ;	tab[min].parent = ind;
 	pop eax
 	mov WORD[eax+4], cx 
+;	tab[min].flag = 0;
+	mov BYTE[eax+6], 0
 ;}while(true)
 	pop eax
 	pop eax
 	jmp huffman_loop
 epilog:
-    	pop 	eax                     ; pop *file
-	pop	ebp
+    	pop 	eax	; ebp-16
+	pop	eax	; ebp-12
+	pop	eax	; ebp-8
+	pop	eax	; ebp-4
+	
+	pop ebp
 	ret
 
 ;============================================
