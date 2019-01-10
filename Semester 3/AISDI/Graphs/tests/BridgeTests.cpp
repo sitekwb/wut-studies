@@ -113,16 +113,6 @@ BOOST_AUTO_TEST_CASE(GivenNonEmptyComplicatedConnectedGraph_WhenCheckingConnecti
 
 }
 
-BOOST_AUTO_TEST_CASE(GivenSinglePointGraph_WhenCheckingConnectivity_ThenItIsConnected){
-    Graph g;
-    g.add(0, 1);
-
-    Graph graph(g);
-    graph.lightRemove(graph.findNode(1));
-
-    BOOST_CHECK( graph.isConnected() );
-}
-
 BOOST_AUTO_TEST_CASE(GivenEmptyGraph_WhenPerformingPrintBridges_ThenItDoesntThrow)
 {
     const Graph graph;

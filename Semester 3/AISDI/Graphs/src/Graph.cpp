@@ -7,37 +7,14 @@
 using namespace aisdi;
 
 Graph::~Graph() {
-    if(!isCopy) {
-        for (auto node: nodes) {
-            delete node;
-        }
-        for (auto line: lines) {
-            delete line;
-        }
+    for (auto node: nodes) {
+        delete node;
+    }
+    for (auto line: lines) {
+        delete line;
     }
 }
 
-
-Graph& Graph::operator=(const Graph& other)
-{
-    if(!isCopy){
-        throw std::runtime_error("Not an only-pointer graph");
-    }
-    if(*this == other){
-        return *this;
-    }
-    //remove all
-    this->Graph::~Graph();
-
-    //copy node and line pointers
-    for(auto line: other.lines){
-        lines.push_back(line);
-    }
-    for(auto node: other.nodes){
-        nodes.push_back(node);
-    }
-    return *this;
-}
 
 void Graph::add(size_type first, size_type second){
     auto node1 = findNode(first);
@@ -54,19 +31,6 @@ void Graph::add(size_type first, size_type second){
     lines.push_back(line);
     node1->lines.push_back(line);
     node2->lines.push_back(line);
-}
-
-void Graph::lightRemove(Node *node){
-    if(!isCopy){
-        throw std::runtime_error("Not an only-pointer graph");
-    }
-    //delete only pointers
-    nodes.remove(node);
-    for(auto it = lines.begin(); it != lines.end(); ++it){
-        if((*it)->isPresent(node)){
-            lines.erase(it);
-        }
-    }
 }
 
 Graph::iterator Graph::begin()
@@ -108,12 +72,24 @@ size_t Graph::getMaxNumber() const{
     }
     return max;
 }
-bool Graph::isConnected() const{
+bool Graph::isConnected(int exclude1 = NOTHING, int exclude2 = NOTHING) const{
     if(isEmpty()){
         return true; //empty graph is connected
     }
 
-    const Node &node = *begin();
+    //find not excluded node
+    auto node_it = begin();
+    for( ; node_it != end(); ++node_it){
+        if(exclude1 != node_it->number && exclude2 != node_it->number){
+            break;
+        }
+    }
+    if(node_it == end()){
+        return true; //graph built of only 2 excluded nodes => connected
+    }
+    const Node &node = *node_it;
+
+
     size_type visitedCount = 0;
 
     auto size = getMaxNumber() + 1;
@@ -121,7 +97,11 @@ bool Graph::isConnected() const{
     for(size_t i = 0; i < size; ++i){
         visited[i] = false;
     }
-
+    if(exclude1 != NOTHING && exclude2 != NOTHING){
+        visited[exclude1] = true;
+        visited[exclude2] = true;
+        visitedCount += 2;
+    }
     doDFS(node, visitedCount, visited);
 
     return visitedCount == getSize();
@@ -152,10 +132,7 @@ bool Graph::lineInUse(Line *line_) const{
 
 void Graph::printGreatBridges(std::ostream &str) const{
     for(auto line: lines){
-        Graph graph(*this); //this constructor copies only pointers
-        graph.lightRemove(line->first);
-        graph.lightRemove(line->second);
-        if(!graph.isConnected()){
+        if(!this->isConnected(line->first->number, line->second->number)){
             str<<line->first->number<<' '<<line->second->number<<std::endl;
         }
     }

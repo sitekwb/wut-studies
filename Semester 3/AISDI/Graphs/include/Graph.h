@@ -23,25 +23,23 @@ namespace aisdi
 class Graph {
 
 public:
+    using value_type = Node;
+    using size_type = std::size_t;
+    using reference = value_type&;
+    using const_reference = const value_type&;
+
+    class ConstIterator;
+    class Iterator;
+
+    using iterator = Iterator;
+    using const_iterator = ConstIterator;
 
 
-  using value_type = Node;
-  using size_type = std::size_t;
-  using reference = value_type&;
-  using const_reference = const value_type&;
+    ~Graph();
 
-  class ConstIterator;
-  class Iterator;
+    Graph() {}
 
-  using iterator = Iterator;
-  using const_iterator = ConstIterator;
-
-
-  ~Graph();
-
-  Graph() : isCopy(false) {}
-
-  Graph(size_t randomGraphSize) : isCopy(false){
+    Graph(size_t randomGraphSize){
       std::random_device rd;
 
       for(size_t i = 0; i < randomGraphSize; ++i){
@@ -51,17 +49,7 @@ public:
               }
           }
       }
-  }
-
-  Graph(const Graph& other) : isCopy(true) {
-    *this = other;
-  }
-
-
-    Graph& operator=(const Graph& other);
-
-
-
+    }
 
     bool isEmpty() const
     {
@@ -87,7 +75,7 @@ public:
 
     void printGreatBridges(std::ostream& str = std::cout) const;
 
-    bool isConnected() const;
+    bool isConnected(int,int) const;
 
     iterator begin();
 
@@ -107,15 +95,14 @@ public:
     bool operator!=(const Graph& other){
         return !operator==(other);
     }
-    void lightRemove(Node *node);
-
     bool lineInUse(Line *line) const;
 private:
     size_t getMaxNumber() const;
     void doDFS(const Node &node, size_t &visitedCount, bool *visited) const;
-  std::list<Node *> nodes;
-  std::list<Line *> lines;
-  bool isCopy;
+
+    std::list<Node *> nodes;
+    std::list<Line *> lines;
+    const static int NOTHING = -1;
 
 };
 
