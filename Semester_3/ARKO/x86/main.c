@@ -6,8 +6,9 @@ extern "C" {
     char inputPath[64], outputPath[64], *text;
     char codes[32*256], tab[8*512];
     //encode
-    void count(FILE *inputFile_, char *tab_);
+    void count(FILE *inputFile_, char *tab_, FILE *outputFile_, char *codes_);
     void huffman(char *tab_);
+    void test();
     //void createCodes(char *tab_, char *codes_);
     //void writeHeader(char *tab_, char *codes_);
     //void write(FILE *inputFile_, FILE *outputFile_, char *tab_, char *codes_);
@@ -18,7 +19,7 @@ extern "C" {
 void test(){
         //test [count(4B)][parent(2B)][flag(1B)][bitCountInCode(1B)]
         printf("code---count--parent--flag--bit\n");
-	for(int i=0; i<256; ++i){
+	for(int i=0; i<512; ++i){
 		if(tab[8*i])
         		printf("%4d---%5d--%6hd--%4d--%3d\n", i, tab[8*i], tab[8*i+4], tab[8*i+6], tab[8*i+7]); 
         }
@@ -41,15 +42,8 @@ int main(int argc, char** argv){
     int encodeFlag;
     scanf("%d", &encodeFlag);
     if(encodeFlag){
-       	count(inputFile, tab);
-        printf("----COUNT TEST-----\n");
-	test();
-	
-	huffman(tab);
-        printf("----HUFFMAN TEST-----\n");
-	test();
-        
-	createCodes(tab, codes);
+       	count(inputFile, tab, outputFile, codes);
+	//createCodes(tab, codes);
         //writeHeader(tab, codes);
         //write(inputFile, outputFile, tab, codes);
     }
