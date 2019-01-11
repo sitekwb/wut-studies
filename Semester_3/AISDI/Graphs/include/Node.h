@@ -6,6 +6,7 @@
 #define AISDI_GRAPHS_NODE_H
 
 #include <list>
+#include <iostream>
 
 class Line;
 

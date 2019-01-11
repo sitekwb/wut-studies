@@ -183,7 +183,46 @@ BOOST_AUTO_TEST_CASE(GivenNonEmptyLineGraph_WhenPerformingPrintBridges_ThenItWor
 
 }
 
+BOOST_AUTO_TEST_CASE(GivenKonradsGraph_WhenPerformingPrintBridges_ThenItWorks) {
+    Graph graph;
+    graph.add(0, 1);
+    graph.add(0, 2);
+    graph.add(0, 3);
+    graph.add(1, 4);
+    graph.add(1, 5);
+    graph.add(4, 5);
+    graph.add(2, 6);
+    graph.add(2, 7);
+    graph.add(6, 7);
+    graph.add(3, 8);
+    graph.add(3, 9);
+    graph.add(8, 9);
 
+    output_test_stream stream;
 
+    graph.printGreatBridges(stream);
+    BOOST_CHECK( stream.is_equal("0 1\n0 2\n0 3\n1 4\n1 5\n2 6\n2 7\n3 8\n3 9\n") );
+
+}
+
+BOOST_AUTO_TEST_CASE(GivenNonGreatBridgedGraph_WhenPerformingPrintBridges_ThenItWorks) {
+    Graph graph;
+    graph.add(0, 1);
+    graph.add(0, 2);
+    graph.add(0, 3);
+    graph.add(0, 4);
+    graph.add(0, 5);
+    graph.add(1, 2);
+    graph.add(2, 3);
+    graph.add(3, 4);
+    graph.add(4, 5);
+    graph.add(5, 1);
+
+    output_test_stream stream;
+
+    graph.printGreatBridges(stream);
+    BOOST_CHECK( stream.is_empty() );
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()
