@@ -23,6 +23,21 @@ void test(){
 		if(tab[8*i])
         		printf("%4d---%5d--%6hd--%4d--%3d\n", i, tab[8*i], tab[8*i+4], tab[8*i+6], tab[8*i+7]); 
         }
+	printf("ind---code\n");
+	for(int i=0; i<256; ++i){
+		if(codes[32*i]){
+			printf("%3d---", i);
+			for(int j=0; j<32; j+=4){
+				if(codes[32*i+j]){
+					printf("%d", codes[32*i+j]);
+				}
+				else{
+					break;
+				}
+			}
+			printf("\n");
+		}
+	}	
 }
 
 int main(int argc, char** argv){

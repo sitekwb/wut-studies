@@ -1,5 +1,7 @@
-; EBP+8 = char *tab [count(4B)][parent(2B)][flag(1B)][bitCountInCode(1B)]
-; EBP+12 = char *codes [code(32B)]
+; EBP+8  = FILE *inputFile #NOTUSED
+; EBP+12 = char *tab [count(4B)][parent(2B)][flag(1B)][bitCountInCode(1B)]
+; EBP+16 = FILE *outputFile #NOTUSED
+; EBP+20 = char *codes 
 
 ;for(char sign: tab1){
 ;	if(tab[sign].count != 0){
@@ -38,119 +40,167 @@ MAX  equ 0xFFFFFFFF ; 4B
 
 section	.text
 global createCodes 
+extern test
+extern writeHeader
 
 createCodes:
-	push ebp
-	mov ebp, esp
-
-	mov eax, DWORD[ebp-8]
+	mov eax, DWORD[ebp+12]
 	mov ebx, eax
 	add ebx, 256*8
 	push DWORD ebx	
 
 	sub eax, 8
 	push DWORD eax
-				; EBP+4 = loop_finish
-				; EBP+8 = sign
+				; EBP-4 = loop_finish
+				; EBP-8 = sign
 ;for(char sign: tab1){
 create_loop:
-	mov edx, DWORD[ebp+8]
+	mov edx, DWORD[ebp-8]	;sign
 	add edx, 8
-	mov DWORD[ebp+8], edx
+	mov DWORD[ebp-8], edx
 	
-	mov ecx, DWORD[ebp+4]
+	mov ecx, DWORD[ebp-4]	;end
 	
-	cmp ecx, edx
-	je end ;TODO
+	cmp ecx, edx		; ? sign==end
+	je epilog
 ;	if(tab[sign].count != 0){
 	mov eax, DWORD[edx]
 	test eax, eax
 	jz create_loop
 ;		int s = sign;
-	push edx		; EBP+12 = s
+	push edx		; EBP-12 = s
+; push codes[sign]
+	mov eax, DWORD[ebp+20]	;codes
+	mov ebx, DWORD[ebp-8]	;&sign
+	mov edx, DWORD[ebp+12]	;tab
+	sub ebx, edx		;sign-tab
+	lea eax, eax+4*ebx	;codes+32*sign
+	
+	push eax		; EBP-16 = codes[sign]
 ;		char reg_count = 28;	//7*4B = 28B
-	mov cl, 28
-	push cl			; EBP+16 = reg_count
+	push BYTE[28]			; EBP-20 = reg_count
 ;		char full = 0;
-	mov ecx, 0
-	push cl			; EBP+17 = full
+	xor ecx, ecx	; ecx=0
+	push cl			; EBP-21 = full
 ;		int code = 0;
 				; ECX = code
+
 ;		while(tab[s].parent != ROOT){
 create_while:
 	mov eax, WORD[edx+4]
 	cmp eax, ROOT
 	je create_shift
 ;			code |= tab[s].flag << full;
-	mov eax, BYTE[edx+6]
-	mov bl, BYTE[ebp+17] ;full
+	mov eax, BYTE[edx+6] ;flag
+	mov bl, BYTE[ebp-21] ;full
 	shl eax, bl
 	or ecx, eax
 ;			++full;
 	inc bl
-	mov BYTE[ebp+17], bl
+	mov BYTE[ebp-21], bl
 ;			if(full == 32){
 	cmp bl, 32
 	jne create_parent
-;				codes[sign][reg_count] = code;
-	mov eax, DWORD[ebp-12]	;codes
-	mov ebx, DWORD[ebp+8]	;&sign
-	mov edx, DWORD[ebp-8]	;tab
-	sub ebx, edx
-	lea eax, eax+4*ebx	;codes+32*sign
-	mov bl, BYTE[ebp+16]	;reg_count
+;				(codes[sign])[reg_count] = code;
+	mov eax, DWORD[ebp-16]	;codes[sign]
+	mov bl, BYTE[ebp-20]	;reg_count
 	add eax, ebx		;&codes[sign][reg_count]
 	
 	mov DWORD[eax], ecx
 ;				reg_count -= 4;
 	sub bl, 4
-	mov BYTE[ebp+16], bl
+	mov BYTE[ebp-20], bl
 ;				code = 0;
-	mov ecx, 0
+	xor ecx, ecx
 ;				full = 0;
-	mov BYTE[ebp+17], ecx
+	mov BYTE[ebp-21], ecx
 ;			}//if
 ;			s = s.parent;
 create_parent:
-	mov edx, DWORD[ebp+12]	;s
-	mov eax, WORD[edx+4]	;parent
-	mov ebx, DWORD[ebp-8]
+	mov edx, DWORD[ebp-12]	;s
+	mov ax, WORD[edx+4]	;parent
+	mov ebx, DWORD[ebp+12]   ;tab
 	lea ebx, eax*8+ebx	;tab+8*parent_sign
-	mov DWORD[ebp+12], ebx
+	mov DWORD[ebp-12], ebx	;s=s.parent
 	jmp create_while
 ;		}
 create_shift:
-				; EBP+4 = loop_finish
-				; EBP+8 = sign
-				; EBP+12 = s
-				; EBP+16 = reg_count
-				; EBP+17 = full
+				; EBP-4 = loop_finish
+				; EBP-8 = sign
+				; EBP-12 = s
+				; EBP-16 = reg_count
+				; EBP-17 = full
 				; ECX = code
 ;		tab[sign].bitcountincode = 8*(28-reg_count)+full;
-	mov al, BYTE[ebp+16]
-	mov bl, 28
-	sub bl, al
-	shl bl, 3
-	mov al, BYTE[ebp+17]
+	mov dl, BYTE[ebp-20] 	;reg_count
+	mov bl, 28	     	;28	
+	sub bl, dl	     	;28-reg_count
+	shl bl, 3		;8*(28-reg_count)
+	mov al, BYTE[ebp-21]	;full
 	add al, bl		;al <- result
 	
-	mov ebx, DWORD[ebp+8]	;sign
-	mov BYTE[ebx+7], al
+	mov ebx, DWORD[ebp-8]	;sign
+	mov BYTE[ebx+7], al	;sign.bitcountincode = result
 ;		//shift
 ;		char reg_count_s = 0;
-	;TODO finished here	
+	xor ecx, ecx		; reg_count_s = 0
+	push cl		; EBP-22 = reg_count_s
+			; EDX = i = reg_count
+shift_while:
 ;		for(char i = reg_count; i != 28; reg_count_s += 4){
-;			code[i] <<= 32-full;
-;			code[i] |= (code[i+=4] >> full);
-;			codes[sign][reg_count_s] = code;
-;		}
-;		code[i] <<= 32-full;
-;		codes[sign][reg_count_s] = code;	
-;	}
-epilog:
+	cmp edx, 28
+	je shift_epilog
 	
-	pop ebp
-	ret
+	mov ebx, DWORD[ebp-16]	;codes[sign]
+;			code[i] <<= 32-full;
+	lea eax, DWORD[ebx+edx]	;codes[sign][i]
+	mov bl, BYTE[ebp-21]	;full
+	mov cl, 32
+	sub cl, bl		;32-full
+	shl eax, ecx		;code[i] 
+;			code[i] |= (code[i+=4] >> full);
+	add dl, 4		;i+=4
+	mov ecx, DWORD[ebp-16]	;codes[sign]
+	lea ecx, DWORD[ecx+dl]	;codes[sign][i+=4]
+	shr ecx, ebx		;code[i+=4] >> full
+	or  eax, ecx		;code
+;			codes[sign][reg_count_s] = code;
+	mov ecx, DWORD[ebp-16]	;codes[sign]
+	mov bl,  BYTE[ebp-22]	;reg_count_s
+	lea DWORD[ecx+ebx], eax
+;	from for: reg_count_s+=4
+	add bl, 4
+	mov BYTE[ebp-22], bl
+;		}
+	jmp shift_while
+shift_epilog:
+;			code[i] <<= 32-full;
+	lea eax, DWORD[ebx+edx]	;codes[sign][i]
+	mov bl, BYTE[ebp-21]	;full
+	mov cl, 32
+	sub cl, bl		;32-full
+	shl eax, ecx		;code[i] 
+;			codes[sign][reg_count_s] = code;
+	mov ecx, DWORD[ebp-16]	;codes[sign]
+	mov bl,  BYTE[ebp-22]	;reg_count_s
+	lea DWORD[ecx+ebx], eax
+;	}
+	pop al	;reg_count_s
+	pop al	;full
+	pop al	;reg_count
+	pop eax ;codes[sign]
+	pop eax	;s
+	jmp create_loop
+epilog:
+				; EBP-4 = loop_finish
+				; EBP-8 = sign
+	pop eax		;loop_finish
+	pop eax		;sign
+	
+	call test
+	
+	jmp writeHeader	
+
 
 ;============================================
 ; STOS
