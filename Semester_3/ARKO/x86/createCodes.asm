@@ -74,26 +74,27 @@ create_loop:
 	mov ebx, DWORD[ebp-8]	;&sign
 	mov edx, DWORD[ebp+12]	;tab
 	sub ebx, edx		;sign-tab
-	lea eax, eax+4*ebx	;codes+32*sign
+	shl ebx, 2
+	add eax, ebx	;codes+32*sign
 	
 	push eax		; EBP-16 = codes[sign]
 ;		char reg_count = 28;	//7*4B = 28B
-	push BYTE[28]			; EBP-20 = reg_count
+	push BYTE 28			; EBP-20 = reg_count
 ;		char full = 0;
 	xor ecx, ecx	; ecx=0
-	push cl			; EBP-21 = full
+	push BYTE 0			; EBP-21 = full
 ;		int code = 0;
 				; ECX = code
 
 ;		while(tab[s].parent != ROOT){
 create_while:
-	mov eax, WORD[edx+4]
+	mov ax, WORD[edx+4]
 	cmp eax, ROOT
 	je create_shift
 ;			code |= tab[s].flag << full;
-	mov eax, BYTE[edx+6] ;flag
+	mov al, BYTE[edx+6] ;flag
 	mov bl, BYTE[ebp-21] ;full
-	shl eax, bl
+	shl eax, ebx 
 	or ecx, eax
 ;			++full;
 	inc bl
@@ -120,7 +121,8 @@ create_parent:
 	mov edx, DWORD[ebp-12]	;s
 	mov ax, WORD[edx+4]	;parent
 	mov ebx, DWORD[ebp+12]   ;tab
-	lea ebx, eax*8+ebx	;tab+8*parent_sign
+	shl eax, 3
+	add ebx, eax	;tab+8*parent_sign
 	mov DWORD[ebp-12], ebx	;s=s.parent
 	jmp create_while
 ;		}
@@ -199,7 +201,9 @@ epilog:
 	
 	call test
 	
-	jmp writeHeader	
+	pop ebp
+	ret
+	;jmp writeHeader	
 
 
 ;============================================

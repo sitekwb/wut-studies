@@ -7,13 +7,15 @@ AFLAGS=-f elf32
 all:result
 
 main.o: main.c
-	$(CC) $(CFLAGS) -g -c main.c
+	$(CC) $(CFLAGS) -g -c $? -Wno-format
 count.o: count.asm
-	$(ASM) $(AFLAGS) -g count.asm
+	$(ASM) $(AFLAGS) -g $?
 huffman.o: huffman.asm
-	$(ASM) $(AFLAGS) -g huffman.asm
-result: main.o count.o huffman.o
-	$(CC) $(CFLAGS) main.o count.o huffman.o -o result
+	$(ASM) $(AFLAGS) -g $?
+createCodes.o: createCodes.asm
+	$(ASM) $(AFLAGS) -g $? 
+result: main.o count.o huffman.o createCodes.o
+	$(CC) $(CFLAGS) $? -o result
 clean: 
 	rm *.o
 	rm result
