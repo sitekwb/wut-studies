@@ -1,3 +1,5 @@
+; try to change it => it goes through all values and search min and independently save new_root
+
 ; EBP+8  = FILE *inputFile #NOTUSED
 ; EBP+12 = char *tab [count(4B)][parent(2B)][flag(1B)][bitCountInCode(1B)]
 ; EBP+16 = FILE *outputFile #NOTUSED
@@ -52,6 +54,7 @@ MAX  equ 0xFFFFFFFF ; 4B
 section	.text
 global huffman 
 extern test
+extern createCodes
 
 ;do{
 huffman:
@@ -210,10 +213,8 @@ epilog:
 	pop	eax	; ebp-4
 	
 	call test
-
-	mov esp, ebp	
-	pop ebp
-	ret
+	
+	jmp createCodes
 
 ;============================================
 ; STOS

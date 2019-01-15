@@ -89,7 +89,7 @@ create_loop:
 ;		while(tab[s].parent != ROOT){
 create_while:
 	mov ax, WORD[edx+4]
-	cmp eax, ROOT
+	cmp ax, ROOT
 	je create_shift
 ;			code |= tab[s].flag << full;
 	mov al, BYTE[edx+6] ;flag
@@ -119,11 +119,12 @@ create_while:
 ;			s = s.parent;
 create_parent:
 	mov edx, DWORD[ebp-12]	;s
+	xor eax, eax
 	mov ax, WORD[edx+4]	;parent
-	mov ecx, DWORD[ebp+12]   ;tab
+	mov edx, DWORD[ebp+12]   ;tab
 	shl eax, 3
-	add ecx, eax	;tab+8*parent_sign
-	mov DWORD[ebp-12], ecx	;s=s.parent
+	add edx, eax	;tab+8*parent_sign
+	mov DWORD[ebp-12], edx	;s=s.parent
 	jmp create_while
 ;		}
 create_shift:
