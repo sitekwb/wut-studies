@@ -64,9 +64,9 @@ huffman:
 	push DWORD MAX			; EBP-8 = MINEST
 	push DWORD MAX			; EBP-12 = minIndex
 	push DWORD MAX 			; EBP-16 = minestIndex
-	push DWORD edx			; EBP-20 = new_ind
-	add edx, 8*256	
-	push DWORD edx			; EBP-24 = finish_sign
+	push DWORD ecx			; EBP-20 = new_ind
+	add ecx, 8*256	
+	push DWORD ecx			; EBP-24 = finish_sign
 huffman_loop:
 ;	int min = MAX, minest = MAX, minIndex = MAX, minestIndex = MAX;
     	mov ecx, DWORD[ebp+12]        	;sign
