@@ -85,7 +85,7 @@ create_loop:
 	push DWORD 0			; EBP-24 = full
 ;		int code = 0;
 				; EBX = code
-
+	mov edx, DWORD[ebp-12]	; s
 ;		while(tab[s].parent != ROOT){
 create_while:
 	mov ax, WORD[edx+4]
@@ -135,12 +135,12 @@ create_shift:
 				; EBP-17 = full
 				; ECX = code
 ;		tab[sign].bitcountincode = 8*(28-reg_count)+full;
-	mov dl, BYTE[ebp-20] 	;reg_count
-	mov cl, 28	     	;28	
-	sub cl, dl	     	;28-reg_count
-	shl cl, 3		;8*(28-reg_count)
-	mov al, BYTE[ebp-24]	;full
-	add al, cl		;al <- result
+	mov edx, DWORD[ebp-20] 	;reg_count
+	mov ecx, 28	     	;28	
+	sub ecx, edx	     	;28-reg_count
+	shl ecx, 3		;8*(28-reg_count)
+	mov eax, DWORD[ebp-24]	;full
+	add eax, ecx		;al <- result
 	
 	mov ecx, DWORD[ebp-8]	;sign
 	mov BYTE[ecx+7], al	;sign.bitcountincode = result
@@ -181,15 +181,16 @@ shift_while:
 	jmp shift_while
 shift_epilog:
 ;			code[i] <<= 32-full;
+	mov ebx, DWORD[ebp-16]	;codes[sign]
 	add ebx, edx
 	mov eax, DWORD[ebx]	;codes[sign][i]
-	mov bl, BYTE[ebp-24]	;full
-	mov cl, 32
-	sub cl, bl		;32-full
+	mov ebx, DWORD[ebp-24]	;full
+	mov ecx, 32
+	sub ecx, ebx		;32-full
 	shl eax, cl		;code[i] 
 ;			codes[sign][reg_count_s] = code;
 	mov ecx, DWORD[ebp-16]	;codes[sign]
-	mov bl,  BYTE[ebp-28]	;reg_count_s
+	mov ebx, DWORD[ebp-28]	;reg_count_s
 	add ecx, ebx
 	mov DWORD[ecx], eax
 ;	}
