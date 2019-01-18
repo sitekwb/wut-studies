@@ -3,7 +3,8 @@
 #include <string>
 #include <cstdlib>
 
-#define DEFAULT_DISK ".x" 
+#define DEFAULT_DISK 	".x" 
+#define INFO_SIZE	256
 
 using namespace std;
 
@@ -13,9 +14,77 @@ bool isset(const char *fileName){
 	return f.good();
 }
 
-int mkdisk(unsigned int capacity, const char *diskName);
+int mkdisk(unsigned int capacity, const char *diskName){
+	if( isset(diskName) ){
+		return 1;
+	}
+	fstream disk;
+	disk.open(diskName, fstream::out | fstream::binary );
+	char x = 0;
+	int xInt = 0, blocksNum = 1, infoSize = (capacity / 4096);
+	disk<<capacity<<infoSize<<blocksNum;
+	//adres (int), rozmiar (int), typ obszaru (plik/wolny blok)(char), nazwa pliku (dla plików)(char[23]) 
+	disk<<xInt<<capacity<<x;
+	for(int i = 0; i < 23; ++i){
+		disk<<x;
+	}
+	unsigned int max = capacity+(infoSize-1)*INFO_SIZE;
+	for(unsigned int i = 0; i < max; ++i){
+		disk << x;
+	}
+	return 0;
+}
 
-int put(const char *filePath, const char *targetName="", const char *diskName=DEFAULT_DISK);
+int put(const char *filePath, const char *targetName="", const char *diskName=DEFAULT_DISK){
+	fstream file, disk;
+	if(!isset(filePath) || !isset(diskName)){
+		return 1;
+	}
+	file.open(filePath, fstream::in | fstream::binary);
+	disk.open(diskName, fstream::in | fstream::out | fstream::binary);
+	
+	int capacity, headerSize, blocksNum;
+	disk>>capacity>>headerSize>>blocksNum;
+	disk.seekg(21);//header+gotoName
+	
+	if(strcmp(targetName, "") == 0){
+		targetName = filePath;
+	}
+	char name[23];
+	//adres (int), rozmiar (int), typ obszaru (plik/wolny blok)(char), nazwa pliku (dla plików)(char[23]) 
+	for(int i = 0; i < blocksNum; disk.seekg(21+(++i)*32) ){
+		disk.read(name, 23);
+		if(strcmp(name, targetName) == 0){
+			disk.seekg(12+i*32);
+			rm(targetName, diskName);
+			break;
+		}
+	}
+	
+	
+	file.seekg(0, file.end);
+	int size = file.tellg();
+	//worst fit
+	disk.seekg(12);
+	int address, freeBlockSize=0;
+	for(int i = 0; i < blocksNum; disk.seekg(12+(++i)*32)){
+		char type;
+		int ad, s;
+		disk>>ad>>s>>type;
+		if(type == FREE_BLOCK && s > size && s > freeBlockSize){
+			address = ad;
+			freeBlockSize = s;
+		}
+	}
+	if(freeBlockSize == 0){
+		if(!fragmentate()){
+			return 1;
+		}
+	}
+		
+	
+	
+}
 
 int get(const char *diskFileName, const char *targetPath, const char *diskName);
 
