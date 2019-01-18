@@ -27,7 +27,6 @@
 ;		file << output;
 ;		output = code_reg << (32/64 - busyOutput);
 ;		busyOutput = 32/64 - busyOutput;
-;		file << output;	
 ;	}
 ; }
 ; file << busyOutput //rubbish bits num
@@ -43,59 +42,163 @@ global write
 extern testWrite
 
 write:
+	push DWORD 0		; EBP-4 = busyOutput
+	push DWORD 0		; EBP-8  = lastFullReg
+	push DWORD 0		; EBP-12 = emptyThis
+	push DWORD 0		; EBP-16 = i
+	push DWORD 0		; EBP-20 = sign
+	push DWORD[ebp+16]	; EBP-24 = outputFile
+	push DWORD 0		; EBP-28 = char to put
+
+write_loop:
 ; get sign
-    	push DWORD[ebp+8]            ; ebp-4 = *file
-   	call fgetc                  ; eax = sign
+	push DWORD[ebp+8]           ; inputFile
+	call fgetc                  ; eax = sign
 	pop ebx
 ; if(EOF) break;
-    	cmp eax, EOF 
+	cmp eax, EOF 
 	je epilog
 
 ;							 EBP+8  = FILE *inputFile
 ;							 EBP+12 = char *tab [count(4B)][parent(2B)][flag(1B)][bitCountInCode(1B)]
-; 							 EBP+16 = FILE *outputFile
+;							 EBP+16 = FILE *outputFile
 ;							 EBP+20 = char *codes
 ;	int emptyThis = 32/64 - bitcount%BITS_PER_REG;
 	mov ebx, [ebp+12];tab[sign]
-	lea bl, BYTE[ebx+8*eax+7];bitcount
-	
-		
-;	int lastFullReg = busyCode/BITS_PER_REG;
-	xor edx, edx		; EDX = output_reg 
+	mov ecx, eax	 ;sign
+	xor eax, eax	 ;clear eax
+	lea al, BYTE[ebx+8*eax+7];bitcount
+	mov ebx, 32	;BITS_PER_REG
+	div bl		;bitcount/BITS_PER_REG: al:/, ah:%
+	sub bl, ah	;emptyThis                               
+;	int lastFullReg = bitcount/BITS_PER_REG;
+	;al = lastFullReg
+				; EDX    = output_reg 
+	mov [ebp-8], eax	; EBP-8  = lastFullReg
+	mov [ebp-12], ebx	; EBP-12 = emptyThis
+	mov [ebp-16], 0		; EBP-16 = i
+	mov [ebp-20], ecx	; EBP-20 = sign
 ;	for(int i=0; i != lastFullReg; ++i){
+copy:
+	mov eax, [ebp-16];i
+	mov ebx, [ebp-8] ;lastFullReg
+	cmp ebx, eax
+	je copy_end
 ;		code_reg = codes[i*(4or8)];
+	mov ebx, [ebp+20];codes
+	shl eax, 2;4*i
+	add ebx, eax		;codes+4*i
+	mov ecx, [ebp-20]	;sign
+	lea ebx, [32*ecx+ebx]	;code_reg
+	mov eax, ebx		;code_reg
 ;		output = output | (code_reg >> busyOutput);
+	mov ecx, [ebp-4]	;busyOutput
+	shr ebx, cl;code_reg>>busyOutput
+	or edx, ebx
 ;		file << output_reg;
+	mov ebx, edx
+	shr ebx, 24
+	mov [ebp-28], ebx
+	call fputc
+	
+	shr edx, 8
+	mov ebx, edx
+	shr ebx, 16
+	mov [ebp-28], ebx
+	call fputc
+	
+	shr edx, 8
+	mov ebx, edx
+	shr ebx, 8
+	mov [ebp-28], ebx
+	call fputc
+	
+	shr edx, 8
+	mov [ebp-28], edx
+	call fputc
 ;		output = code_reg << (32/64 - busyOutput);
+	mov edx, 32
+	sub dl, cl
+	mov cl, dl	;32-busyOutput
+	shl eax, cl	;code_reg<<(32-busyOutput)
 ;		busyOutput = 32/64 - busyOutput;
+	mov [ebp-4], ecx;busyOutput
+	mov edx, eax;output
+;	++i	
+	mov eax, [ebp-16]
+	inc eax
+	mov [ebp-16], eax
+
+	jmp copy
 ;	}
+copy_end:
+;		code_reg = codes[(4/8)*(lastFullReg)];
+	mov eax, [ebp-8]	;lastFullReg
+	shl eax, 2		;4*lastFullReg
+	
+	mov ebx, [ebp-20]	;sign
+	shl ebx, 5		;sign*32
+
+	mov ecx, [ebp+20];codes
+	add eax, ebx;32*sign+4*lastFullReg
+	mov eax, [1*eax+ecx];codes[sign][lastFullReg*4]
+	mov [ebp-16], eax		; EBP-16 = code_reg
+;		output = output | (code_reg >> busyOutput);
+	mov ecx, [ebp-4]	;busyOutput
+	shr eax, cl;code>>busyOutput
+	or edx, eax
+;		file << output_reg;
+	mov ebx, edx
+	shr ebx, 24
+	mov [ebp-28], ebx
+	call fputc
+	
+	shr edx, 8
+	mov ebx, edx
+	shr ebx, 16
+	mov [ebp-28], ebx
+	call fputc
+	
+	shr edx, 8
+	mov ebx, edx
+	shr ebx, 8
+	mov [ebp-28], ebx
+	call fputc
+	
+	shr edx, 8
+	mov [ebp-28], edx
+	call fputc	
 ;	if(busyOutput <= emptyThis){
-;		code_reg = codes[(4/8)*(lastFullReg+1)];
-;		output = output | (code_reg >> busyOutput);
-;		file << output_reg;
-;	}
-;	else{
-;		code_reg = codes[(4/8)*(lastFullReg+1)];
-;		output = output | (code_reg >> busyOutput);
-;		file << output;
+	mov eax, [ebp-4]	;busyOutput
+	mov ebx, [ebp-12]	;emptyThis
+	cmp eax, ebx
+	jbe write_loop
+shift:
 ;		output = code_reg << (32/64 - busyOutput);
+	mov eax, [ebp-4]	;busyOutput
+	mov ecx, 32
+	sub cl, al;32-busyOutput
+	mov edx, [ebp-16]	;code_reg
+	shl edx, cl
 ;		busyOutput = 32/64 - busyOutput;
-;		file << output;	
+	mov [ebp-4], ecx	;busyOutput
 ;	}
 ; }
-; tab[sign].count++
-    	lea ecx, [ebx+8*eax]        ; ecx = tab[sign].count
-    	mov edx, [ecx]
-    	inc edx
-    	mov [ecx], edx
-; tab[sign].parent = ROOT
-	mov WORD [ecx + 4], ROOT
-
-	jmp loop
+	jmp write_loop
 epilog:
-	pop eax
-	call test
-	jmp huffman
+; file << busyOutput //rubbish bits num
+	pop eax 	;ebp-28
+	pop eax 	;ebp-24
+	pop eax 	;ebp-20
+	pop eax 	;ebp-16
+	pop eax 	;ebp-12
+	pop eax 	;ebp-8
+	pop eax 	;ebp-48
+	
+	call testWrite
+
+	mov esp, ebp
+	ret
 ;============================================
 ; STOS
 ;============================================
