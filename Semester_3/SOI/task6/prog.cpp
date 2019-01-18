@@ -55,7 +55,6 @@ int put(const char *filePath, const char *targetName="", const char *diskName=DE
 	for(int i = 0; i < blocksNum; disk.seekg(21+(++i)*32) ){
 		disk.read(name, 23);
 		if(strcmp(name, targetName) == 0){
-			disk.seekg(12+i*32);
 			rm(targetName, diskName);
 			break;
 		}
@@ -66,22 +65,27 @@ int put(const char *filePath, const char *targetName="", const char *diskName=DE
 	int size = file.tellg();
 	//worst fit
 	disk.seekg(12);
-	int address, freeBlockSize=0;
-	for(int i = 0; i < blocksNum; disk.seekg(12+(++i)*32)){
-		char type;
-		int ad, s;
-		disk>>ad>>s>>type;
-		if(type == FREE_BLOCK && s > size && s > freeBlockSize){
-			address = ad;
-			freeBlockSize = s;
+	int address, i, freeBlockSize=0;
+	do{
+		for(i = 0; i < blocksNum; disk.seekg(12+(++i)*32)){
+			char type;
+			int ad, s;
+			disk>>ad>>s>>type;
+			if(type == FREE_BLOCK && s > size && s > freeBlockSize){
+				address = ad;
+				freeBlockSize = s;
+			}
 		}
-	}
-	if(freeBlockSize == 0){
-		if(!fragmentate()){
-			return 1;
+		if(freeBlockSize == 0){//free block not found
+			if(fragmentate()){//if gave error
+				return 1;
+			}
+			continue;
 		}
-	}
-		
+		break;
+	}while(true)	
+	
+	newBlockSize = freeBlockSize-size;
 	
 	
 }
