@@ -39,7 +39,6 @@ extern fputc
 
 section	.text
 global write
-extern testWrite
 
 write:
 	push DWORD 0		; EBP-4 = busyOutput
@@ -66,8 +65,11 @@ write_loop:
 ;	int emptyThis = 32/64 - bitcount%BITS_PER_REG;
 	mov ebx, [ebp+12];tab[sign]
 	mov ecx, eax	 ;sign
+	shl eax, 3	 ;8*sign
+	add eax, 7	 ;8*sign+7
+	add ebx, eax	 ;tab[sign]+8*sign+7
 	xor eax, eax	 ;clear eax
-	lea al, BYTE[ebx+8*eax+7];bitcount
+	mov al, [ebx];bitcount
 	mov ebx, 32	;BITS_PER_REG
 	div bl		;bitcount/BITS_PER_REG: al:/, ah:%
 	sub bl, ah	;emptyThis                               
@@ -76,7 +78,7 @@ write_loop:
 				; EDX    = output_reg 
 	mov [ebp-8], eax	; EBP-8  = lastFullReg
 	mov [ebp-12], ebx	; EBP-12 = emptyThis
-	mov [ebp-16], 0		; EBP-16 = i
+	mov [ebp-16], DWORD 0		; EBP-16 = i
 	mov [ebp-20], ecx	; EBP-20 = sign
 ;	for(int i=0; i != lastFullReg; ++i){
 copy:
@@ -89,7 +91,8 @@ copy:
 	shl eax, 2;4*i
 	add ebx, eax		;codes+4*i
 	mov ecx, [ebp-20]	;sign
-	lea ebx, [32*ecx+ebx]	;code_reg
+	shl ecx, 5	;32*sign
+	lea ebx, [ecx+ebx]	;code_reg
 	mov eax, ebx		;code_reg
 ;		output = output | (code_reg >> busyOutput);
 	mov ecx, [ebp-4]	;busyOutput
@@ -195,8 +198,6 @@ epilog:
 	pop eax 	;ebp-8
 	pop eax 	;ebp-48
 	
-	call testWrite
-
 	mov esp, ebp
 	ret
 ;============================================

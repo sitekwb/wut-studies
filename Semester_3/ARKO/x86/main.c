@@ -16,6 +16,7 @@ extern "C" {
 }
 #endif
 
+
 void test(){
         //test [count(4B)][parent(2B)][flag(1B)][bitCountInCode(1B)]
         printf("code---count--parent--flag--bit\n");

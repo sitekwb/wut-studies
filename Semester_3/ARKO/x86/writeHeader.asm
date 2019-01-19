@@ -15,7 +15,6 @@ extern fwrite
 
 section	.text
 global writeHeader
-extern testHeader
 extern write 
 
 writeHeader:
@@ -79,8 +78,6 @@ epilog:
 	pop eax
 	pop eax
 	
-	call testHeader
-
 	jmp write 
 ;============================================
 ; STOS
