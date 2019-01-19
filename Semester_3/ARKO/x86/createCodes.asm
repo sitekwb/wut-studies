@@ -92,25 +92,28 @@ create_while:
 	cmp ax, ROOT
 	je create_shift
 ;			code |= tab[s].flag << full;
+	xor eax, eax
 	mov al, BYTE[edx+6] ;flag
-	mov cl, BYTE[ebp-24] ;full
+	mov ecx, DWORD[ebp-24] ;full
 	shl eax, cl
 	or ebx, eax
 ;			++full;
 	inc cl
-	mov BYTE[ebp-24], cl
+	mOV DWORD[ebp-24], ecx
 ;			if(full == 32){
 	cmp cl, 32
 	jne create_parent
 ;				(codes[sign])[reg_count] = code;
 	mov eax, DWORD[ebp-16]	;codes[sign]
-	mov cl, BYTE[ebp-20]	;reg_count
+	mov ecx, DWORD[ebp-20]	;reg_count(BYTE)
+	shl ecx, 24
+	shr ecx, 24
 	add eax, ecx		;&codes[sign][reg_count]
 	
 	mov DWORD[eax], ebx
 ;				reg_count -= 4;
 	sub cl, 4
-	mov BYTE[ebp-20], cl
+	mov DWORD[ebp-20], ecx
 ;				code = 0;
 	xor ebx, ebx
 ;				full = 0;
@@ -128,12 +131,13 @@ create_parent:
 	jmp create_while
 ;		}
 create_shift:
-				; EBP-4 = loop_finish
-				; EBP-8 = sign
-				; EBP-12 = s
-				; EBP-16 = reg_count
-				; EBP-17 = full
-				; ECX = code
+;		SAVE CODE
+;		(codes[sign])[reg_count] = code;
+	mov eax, DWORD[ebp-16]	;codes[sign]
+	mov ecx, DWORD[ebp-20]	;reg_count(BYTE)
+	and ecx, 0xFF	
+	add eax, ecx		;&codes[sign][reg_count]
+	mov DWORD[eax], ebx
 ;		tab[sign].bitcountincode = 8*(28-reg_count)+full;
 	mov edx, DWORD[ebp-20] 	;reg_count
 	mov ecx, 28	     	;28	

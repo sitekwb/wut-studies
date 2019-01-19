@@ -38,7 +38,8 @@ void test(){
 			}
 			printf("\n");
 		}
-	}	
+	}
+	printf("FINISH\n");	
 }
 
 int main(int argc, char** argv){
