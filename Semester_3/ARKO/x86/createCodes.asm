@@ -133,11 +133,6 @@ create_parent:
 create_shift:
 ;		SAVE CODE
 ;		(codes[sign])[reg_count] = code;
-	mov eax, DWORD[ebp-16]	;codes[sign]
-	mov ecx, DWORD[ebp-20]	;reg_count(BYTE)
-	and ecx, 0xFF	
-	add eax, ecx		;&codes[sign][reg_count]
-	mov DWORD[eax], ebx
 ;		tab[sign].bitcountincode = 8*(28-reg_count)+full;
 	mov edx, DWORD[ebp-20] 	;reg_count
 	mov ecx, 28	     	;28	
@@ -152,6 +147,7 @@ create_shift:
 ;		char reg_count_s = 0;
 	xor ecx, ecx		; reg_count_s = 0
 	push DWORD 0		; EBP-28 = reg_count_s
+	push ebx
 			; EDX = i = reg_count
 shift_while:
 ;		for(char i = reg_count; i != 28; reg_count_s += 4){
@@ -185,20 +181,21 @@ shift_while:
 	jmp shift_while
 shift_epilog:
 ;			code[i] <<= 32-full;
-	mov ebx, DWORD[ebp-16]	;codes[sign]
-	add ebx, edx
-	mov eax, DWORD[ebx]	;codes[sign][i]
 	mov ebx, DWORD[ebp-24]	;full
+	and ebx, 0xFF
 	mov ecx, 32
 	sub ecx, ebx		;32-full
+	pop eax			;lastRegCode
 	shl eax, cl		;code[i] 
 ;			codes[sign][reg_count_s] = code;
 	mov ecx, DWORD[ebp-16]	;codes[sign]
-	mov ebx, DWORD[ebp-28]	;reg_count_s
+	pop ebx			;reg_count_s
 	add ecx, ebx
 	mov DWORD[ecx], eax
 ;	}
-	pop eax	;28reg_count_s
+	
+;	call test
+	
 	pop eax	;24full
 	pop eax	;20reg_count
 	pop eax ;16codes[sign]

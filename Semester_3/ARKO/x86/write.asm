@@ -38,9 +38,9 @@ extern fgetc
 extern fputc
 
 section	.text
-global write
+global writeT
 
-write:
+writeT:
 	push DWORD 0		; EBP-4 = busyOutput
 	push DWORD 0		; EBP-8  = lastFullReg
 	push DWORD 0		; EBP-12 = emptyThis

@@ -15,7 +15,7 @@ extern fwrite
 
 section	.text
 global writeHeader
-extern write 
+extern writeT 
 
 writeHeader:
 	push DWORD[ebp+12]	; EBP-4  = tab[sign]
@@ -36,23 +36,30 @@ lop:
 	jz loop_next
 ;		outputFile << sign << bitcountincode << code;
 ;sign
-	push eax	;sign = EBP-20
+	push ecx	;bitcountincode
 	call fputc
 ;bitcountincode	
-	mov [ebp-20], ecx
+	mov eax, [ebp-8];sign
+	mov ebx, [ebp-20];bcic
+	mov [ebp-8], ebx;bcic temp in sign_stack
+	mov [ebp-20], eax;sign
 	call fputc
 ;code
-	shr ecx, 3	;bytecountincode
-	inc ecx
+	mov eax, [ebp-20];sign
+	mov ecx, [ebp-8];bcic
+	mov [ebp-8], eax;sign
+	shr ecx, 3	;fullbytecountincode
+	inc ecx		;fbcic+1
 	mov [ebp-20], ecx
 	push DWORD 1	;size
-	push DWORD[ebp-12];code
+	push DWORD[ebp-12];&code
 	call fwrite
 
-	pop ebx;code
+	pop ebx;&code
 	pop ebx;size
-	pop ebx;sign
+	pop eax;sign = EBP-20
 loop_next:
+	mov eax, [ebp-8];getSign()
 	inc eax		;sign++
 	mov [ebp-8], eax;save sign
 
@@ -73,12 +80,13 @@ epilog:
 	call fputc
 	call fputc
 
-	pop eax
-	pop eax
-	pop eax
-	pop eax
-	
-	jmp write 
+	pop eax;-20
+	pop eax;-16
+	pop eax;-12
+	pop eax;-8
+
+		
+	jmp writeT 
 ;============================================
 ; STOS
 ;============================================

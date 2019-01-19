@@ -24,8 +24,8 @@ void test(){
 		if(tab[8*i]){
         		printf("%4d---%5d--%6hd--%4d--%3d---", i, tab[8*i], tab[8*i+4], tab[8*i+6], tab[8*i+7]); 
 			if(i<256){
-				for(int j=0; j<32; j+=4){
-					printf("%x", codes[32*i+j]);
+				for(int j=0; j<32; j++){
+					printf("%02x", codes[32*i+j]);
 				}
 			}
 			printf("\n");
