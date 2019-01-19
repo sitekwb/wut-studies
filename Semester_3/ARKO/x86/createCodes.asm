@@ -44,13 +44,13 @@ extern test
 extern writeHeader
 
 createCodes:
-	mov eax, DWORD[ebp+12]
-	mov ebx, eax
-	add ebx, 256*8
-	push DWORD ebx	
+	mov eax, DWORD[ebp+12];tab
+	mov ebx, eax;tab
+	add ebx, 256*8;loop_finish
+	push DWORD ebx	;EBP-4
 
-	sub eax, 8
-	push DWORD eax
+	sub eax, 8;tab-8
+	push DWORD eax;sign
 				; EBP-4 = loop_finish
 				; EBP-8 = sign
 ;for(char sign: tab1){
@@ -59,12 +59,12 @@ create_loop:
 	add edx, 8
 	mov DWORD[ebp-8], edx
 	
-	mov ecx, DWORD[ebp-4]	;end
+	mov ecx, [ebp-4]	;end
 	
 	cmp ecx, edx		; ? sign==end
 	je epilog
 ;	if(tab[sign].count != 0){
-	mov eax, DWORD[edx]
+	mov eax, [edx];count
 	test eax, eax
 	jz create_loop
 ;		int s = sign;
@@ -206,11 +206,9 @@ epilog:
 	pop eax		;8loop_finish
 	pop eax		;4sign
 	
-	jmp test ;later call
+	call test
 	
-	;pop ebp
-	;ret
-	;jmp writeHeader	
+	jmp writeHeader	
 
 
 ;============================================
