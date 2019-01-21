@@ -6,8 +6,8 @@ extern "C" {
     char inputPath[64], outputPath[64], *text;
     char codes[32*256], tab[8*512];
     //encode
-    void count(FILE *inputFile_, char *tab_, FILE *outputFile_, char *codes_);
-    void huffman(char *tab_);
+    void encode(FILE *inputFile_, char *tab_, FILE *outputFile_, char *codes_);
+    void decode(FILE *inputFile_, char *tab_, FILE *outputFile_, char *codes_);
     void test();
     //void createCodes(char *tab_, char *codes_);
     //void writeHeader(char *tab_, char *codes_);
@@ -51,13 +51,10 @@ int main(int argc, char** argv){
     int encodeFlag;
     scanf("%d", &encodeFlag);
     if(encodeFlag){
-       	count(inputFile, tab, outputFile, codes);
-	//createCodes(tab, codes);
-        //writeHeader(tab, codes);
-        //write(inputFile, outputFile, tab, codes);
+       	encode(inputFile, tab, outputFile, codes);
     }
     else{
-        //TODO decoding
+	decode(inputFile, tab, outputFile, codes);	    
     }
     
   return 0;

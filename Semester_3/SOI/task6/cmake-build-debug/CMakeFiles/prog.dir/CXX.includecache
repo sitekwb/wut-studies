@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/wojciechsitek/OneDrive/wut-studies/Semester_3/SOI/task6/prog.cpp
+iostream
+-
+fstream
+-
+string
+-
+cstdlib
+-
+iomanip
+-
+

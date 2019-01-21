@@ -14,10 +14,11 @@ EOF equ -1
 extern fgetc
 
 section	.text
-global  count
+global encode 
 extern test
 extern huffman
 
+encode:
 count:
 	push	ebp
 	mov	    ebp,    esp
