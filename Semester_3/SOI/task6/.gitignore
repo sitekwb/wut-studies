@@ -1,0 +1,17 @@
+create mode 100644 Semester_3/SOI/task6/.idea/.name
+.idea/codeStyles/Project.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/task6.iml
+.idea/vcs.xml
+.idea/workspace.xml
+README.md
+cmake-build-debug/CMakeCache.txt
+cmake-build-debug/CMakeFiles/3.12.3/CMakeCCompiler.cmake
+cmake-build-debug/CMakeFiles/3.12.3/CMakeCXXCompiler.cmake
+ create mode 100755 Semester_3/SOI/task6/cmake-build-debug/CMakeFiles/3.12.3/CMakeDetermineCompilerABI_C.bin
+ create mode 100755 Semester_3/SOI/task6/cmake-build-debug/CMakeFiles/3.12.3/CMakeDetermineCompilerABI_CXX.bin
+cmake-build-debug/CMakeFiles/3.12.3/CMakeSystem.cmake
+cmake-build-debug/CMakeFiles/3.12.3/CompilerIdC/CMakeCCompilerId.c
+cmake-build-debug
+tests/prog

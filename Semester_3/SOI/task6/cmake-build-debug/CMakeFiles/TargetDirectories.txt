@@ -1,3 +1,0 @@
-/Users/wojciechsitek/OneDrive/wut-studies/Semester_3/SOI/task6/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/Users/wojciechsitek/OneDrive/wut-studies/Semester_3/SOI/task6/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/wojciechsitek/OneDrive/wut-studies/Semester_3/SOI/task6/cmake-build-debug/CMakeFiles/prog.dir
