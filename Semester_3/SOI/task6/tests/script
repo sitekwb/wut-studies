@@ -1,0 +1,62 @@
+cp ../cmake-build-debug/prog ./
+number=$1
+
+echo "---------------CREATING DISK---------------"
+./xrmdisk
+./xmkdisk 16384 #16kB capacity
+
+./xinfo
+
+
+for i in `seq 1 $number`
+do
+	file="file$i"
+	for j in `seq 1 $i`
+	do
+		echo -n $i >>$file
+	done
+	
+	echo "->PUTTING $file"
+	./xput $file
+	./xinfo
+	sleep 1
+done
+
+echo "---------------DELETING HALF OF FILES---------------"
+k=`expr $1 / 2`
+a=1
+for i in `seq 1 $k`
+do
+	file="file$a"
+	echo "->DELETING $file"
+	./xrm $file
+	a=`expr $a + 2`
+done
+
+./xinfo
+sleep 3
+
+echo "--------------GETTING FILE-------------------------"
+file="file$number"
+target="x$file"
+./xget $file $target
+echo -n "->DIFF: "
+diff $file $target
+
+echo "---------------DEFRAGMENTATING---------------------"
+./xdefrag
+./xinfo
+
+echo "--------------GETTING FILE-------------------------"
+file="file$number"
+target="x$file"
+./xget $file $target
+echo -n "->DIFF: "
+diff $file $target
+
+echo "--------------DELETING DISK AND FILES------------------------"
+./xrmdisk
+rm file*
+echo ->LIST OF FOLDER
+ls -al
+echo "->END"

@@ -9,6 +9,7 @@
 #define FREE_BLOCK 		    0
 #define FILE_TYPE		    1
 #define DEFAULT_CAPACITY    256
+#define MIN_HEADER_SIZE     32*32
 
 using namespace std;
 
@@ -35,7 +36,9 @@ struct Disk{
 
 		if(existing) {
             disk.open(diskName, fstream::in | fstream::out | fstream::binary);
-            disk>>capacity>>headerSize>>blocksNum;
+            (*this)>>capacity;
+            (*this)>>headerSize;
+            (*this)>>blocksNum;
         }
         else {
             disk.open(diskName, fstream::out | fstream::binary | fstream::trunc | fstream::in);
@@ -43,13 +46,26 @@ struct Disk{
 	}
 
     ostream &operator<<(int num) {
+        /*auto *wr= reinterpret_cast<const char *>(&num);
+        for(auto *c = wr+sizeof(num)-1; c>=wr; --c){
+            operator<<(*c);
+        }
+        return disk;*/
         disk.write(reinterpret_cast<const char *>(&num), sizeof(num));
         return disk;
     }
 
-    istream &operator>>(int num) {
-        disk.read(reinterpret_cast<const char *>(&num), sizeof(num));
+    ostream &operator<<(char c) {
+        return disk<<c;
+    }
+
+    istream &operator>>(int &num) {
+        disk.read(reinterpret_cast<char *>(&num), sizeof(num));
         return disk;
+    }
+
+    istream &operator>>(char &c) {
+        return disk>>c;
     }
 
     //12B of disk header; 32B of info: address(int)0; size(int)4; type(char)8; name(char[23])9
@@ -58,7 +74,9 @@ struct Disk{
 		for(int i = 0; i < blocksNum; disk.seekg(12+(++i)*32)){
 			char type, name[23];
 			int ad, s;
-			disk>>ad>>s>>type;
+            (*this)>>ad;
+            (*this)>>s;
+            (*this)>>type;
 			disk.read(name, 23);
 
 			if(strcmp(name, fileName) == 0 && type == FILE_TYPE){
@@ -80,7 +98,9 @@ struct Disk{
 		//get block information
 		disk.seekg(12);
 		for(int i = 0; i < blocksNum; disk.seekg(12+(++i)*32)){
-			disk>>addressTab[0][i]>>sizeTab[0][i]>>typeTab[0][i];
+            (*this)>>addressTab[0][i];
+            (*this)>>sizeTab[0][i];
+            (*this)>>typeTab[0][i];
 			disk.read(nameTab[0][i], 23);
 
 			if(typeTab[0][i] == FILE_TYPE  &&  sizeTab[0][i] != 0 ){
@@ -107,12 +127,16 @@ struct Disk{
 			tempName+='x';
 		}
 
-		fstream temp;
-		temp.open(tempName, fstream::out | fstream::binary);
-		temp<<capacity<<headerSize<<blocksNum;
+		Disk temp(tempName.c_str(), false);
+
+		temp<<capacity;
+		temp<<headerSize;
+		temp<<blocksNum;
 		for(int i=0; i<blocksNum; ++i){
-			temp<<addressTab[1][i]<<sizeTab[1][i]<<typeTab[1][i];
-			temp.write(nameTab[1][i], 23);
+			temp<<addressTab[1][i];
+			temp<<sizeTab[1][i];
+			temp<<typeTab[1][i];
+			temp.disk.write(nameTab[1][i], 23);
 		}
 		for(int i=blocksNum*32; i<headerSize; ++i){
 			temp<<'0';
@@ -122,16 +146,16 @@ struct Disk{
 			disk.seekg(oldAddressTab[i]);
 			for(int j=0; j<sizeTab[1][i]; ++j){
 				char a;
-				disk>>a;
+                (*this)>>a;
 				temp<<a;
 			}
 		}
 
-		for(int i=temp.tellp(); i<12+headerSize+capacity; ++i){
-		    temp<<'\0';
+		for(int i=temp.disk.tellp(); i<12+headerSize+capacity; ++i){
+		    temp<<(char)'\0';
 		}
 
-		disk.close();
+		close();
 		temp.close();
 
 		remove(name.c_str());
@@ -142,37 +166,46 @@ struct Disk{
 		return 0;
 	}
 
+    int close(){
+	    disk.close();
+	    return 0;
+	}
 
     int rm(){
         //it's assumed that file is found
         disk.seekp(fileHeaderAddress+8);//char type after two ints
-        disk<<(char)FREE_BLOCK;
+        (*this)<<(char)FREE_BLOCK;
         return 0;
     }
 
     void setBlocksNum(int x){
 	    blocksNum = x;
 	    disk.seekp(8);
-	    disk<<blocksNum;
+        (*this)<<blocksNum;
 	}
 
 };
 
 
 
-int mkdisk(unsigned int capacity, const char *diskName){
+int mkdisk(int capacity, const char *diskName){
     Disk d(diskName, false);
 	char type = FREE_BLOCK;
 	d.blocksNum = 1;
 	d.headerSize = (capacity / 4096);
 	d.headerSize -= d.headerSize%32; //align to infoBlock-size
+	d.headerSize = max(MIN_HEADER_SIZE, d.headerSize);
 	d.capacity = capacity;
-	d.disk<<d.capacity<<d.headerSize<<d.blocksNum;
+	d<<d.capacity;
+	d<<d.headerSize;
+	d<<d.blocksNum;
     int address = 12+d.headerSize;
 	//adres (int), rozmiar (int), typ obszaru (plik/wolny blok)(char), nazwa pliku (dla plików)(char[23])
-	d.disk<<address<<d.capacity<<type;
+	d<<address;
+	d<<d.capacity;
+	d<<type;
     for(int i=d.disk.tellp(); i<12+d.headerSize+d.capacity; ++i){
-        d.disk<<'\0';
+        d<<(char)'\0';
     }
 	return 0;
 }
@@ -192,6 +225,10 @@ int rm(const char *fileName, const char *diskName){
 int put(const char *filePath, const char *targetName="", const char *diskName=DEFAULT_DISK){
     Disk d(diskName, true);
     fstream file;
+
+    if(!isset(filePath)){
+        return 1;
+    }
 
     file.open(filePath, fstream::in | fstream::binary);
 
@@ -215,7 +252,9 @@ int put(const char *filePath, const char *targetName="", const char *diskName=DE
 		for(i = 0; i < d.blocksNum; disk.seekg(12+(++i)*32)){
 			char type;
 			int ad, s;
-			disk>>ad>>s>>type;
+			d>>ad;
+			d>>s;
+			d>>type;
 			if(type == FREE_BLOCK && s > fileSize && s > freeBlockSize){
 				address = ad;
 				freeBlockSize = s;
@@ -240,24 +279,35 @@ int put(const char *filePath, const char *targetName="", const char *diskName=DE
 
 	disk.seekp(12+32*index);
 	//write header of new file
-	disk<<address<<fileSize<<(char)FILE_TYPE;
+	d<<address;
+	d<<fileSize;
+	d<<(char)FILE_TYPE;
 	disk.write(targetName, 23);
 	//set input after header file
-	disk.seekg(disk.tellp());
 	int oldAd, oldSize;
 	char oldType, oldName[23];
 
-    disk>>oldAd>>oldSize>>oldType;
+    disk.seekg(12+32*(index+1));
+    d>>oldAd;
+    d>>oldSize;
+    d>>oldType;
     disk.read(oldName, 23);
 
-    disk<<freeBlockAddress2<<freeBlockSize2<<(char)FREE_BLOCK;
+    disk.seekp(12+32*(index+1));
+    d<<freeBlockAddress2;
+    d<<freeBlockSize2;
+    d<<(char)FREE_BLOCK;
     disk.write(oldName, 23);//something, doesn't matter what
+
 
     int ad, s;
     char t, n[23];
     //rewrite all other blocks
 	for(int i = index+2; i<d.blocksNum; ++i){
-	    disk>>ad>>s>>t;
+	    disk.seekg(12+32*i);
+	    d>>ad;
+	    d>>s;
+	    d>>t;
         disk.read(n, 23);
 
         swap(ad, oldAd);
@@ -265,22 +315,31 @@ int put(const char *filePath, const char *targetName="", const char *diskName=DE
         swap(t, oldType);
         swap(n, oldName);
 
-        disk<<ad<<s<<t;
+        disk.seekp(12+32*i);
+        d<<ad;
+        d<<s;
+        d<<t;
         disk.write(n, 23);//something, doesn't matter what
     }
-    disk<<oldAd<<oldSize<<oldType;
+    disk.seekp(12+32*(d.blocksNum+1));
+    d<<oldAd;
+	d<<oldSize;
+	d<<oldType;
     disk.write(oldName, 23);//something, doesn't matter what
 
     //copy content of file
     disk.seekp(address);
     file.seekg(0);
-    while(file.tellg() != fileSize){
+    while(!file.eof()){
         char c;
         file>>c;
         disk<<c;
     }
 
     d.setBlocksNum(d.blocksNum+1);
+
+    file.close();
+    d.close();
 
     return 0;
 }
@@ -290,7 +349,7 @@ int get(const char *diskFileName, const char *targetPath, const char *diskName){
     Disk d(diskName, true);
     fstream &disk = d.disk;
 
-    if(d.searchFile(diskFileName)){
+    if(d.searchFile(diskFileName)){//if searching gave error
         return 1;
     }
 
@@ -299,12 +358,12 @@ int get(const char *diskFileName, const char *targetPath, const char *diskName){
     }
 
     fstream file;
-    file.open(targetPath, fstream::binary | fstream::out);
+    file.open(targetPath, fstream::binary | fstream::trunc | fstream::out);
 
     //copy content of file
-    disk.seekg(d.fileAddress);
     int diskFileEnd = d.fileAddress+d.fileSize;
     file.seekp(0);
+    disk.seekg(d.fileAddress);
     while(disk.tellg() != diskFileEnd){
         char c;
         disk>>c;
@@ -318,16 +377,14 @@ int lsdisk(const char *diskName){
     Disk d(diskName, true);
     fstream &disk = d.disk;
 
-    cout<<"Capacity   = "<<d.capacity<<endl;
-    cout<<"HeaderSize = "<<d.headerSize<<endl;
-    cout<<"BlocksNum  = "<<d.blocksNum<<endl;
-
     disk.seekg(12);
     cout<<"Size   |---|Name"<<endl;
     for(int i = 0; i < d.blocksNum; disk.seekg(12+(++i)*32)){
         char type, name[23];
         int ad, s;
-        disk>>ad>>s>>type;
+        d>>ad;
+        d>>s;
+        d>>type;
         disk.read(name, 23);
 
         if(type == FILE_TYPE){
@@ -347,17 +404,29 @@ int info(const char *diskName){
     Disk d(diskName, true);
     fstream &disk = d.disk;
 
+    cout<<"Capacity   = "<<d.capacity<<endl;
+    cout<<"HeaderSize = "<<d.headerSize<<endl;
+    cout<<"BlocksNum  = "<<d.blocksNum<<endl;
+
     disk.seekg(12);
     cout<<"Num|---|Address|---|Size   |---|Type|---|Name"<<endl;
     for(int i = 0; i < d.blocksNum; disk.seekg(12+(++i)*32)){
         char type, name[23];
         int ad, s;
-        disk>>ad>>s>>type;
+        d>>ad;
+        d>>s;
+        d>>type;
         disk.read(name, 23);
 
-        cout<<setw(3)<<i+1<<"|---|"<<setw(7)<<ad<<"|---|"<<setw(7)<<s<<"|---|"<<setw(4)<<((type==FREE_BLOCK)?"----":"FILE")<<"|---|"<<name<<endl;
+        cout<<setw(3)<<i+1<<"|---|"<<setw(7)<<ad<<"|---|"<<setw(7)<<s<<"|---|"<<setw(4)<<((type==FREE_BLOCK)?"----":"FILE")<<"|---|"<<((type==FREE_BLOCK)?"":name)<<endl;
 
     }
+    return 0;
+}
+
+int defragmentate(const char *diskName){
+    Disk disk(diskName, true);
+    disk.defragmentate();
     return 0;
 }
 
@@ -396,6 +465,8 @@ int main(int argc, const char *argv[]){
                 return rmdisk((argc == 3) ? argv[2] : DEFAULT_DISK);
             case 6:
                 return info((argc == 3) ? argv[2] : DEFAULT_DISK);
+            case 7:
+                return defragmentate((argc == 3) ? argv[2] : DEFAULT_DISK);
         }
     }
     catch(...){
