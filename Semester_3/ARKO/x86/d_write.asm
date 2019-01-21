@@ -36,16 +36,12 @@ EOF equ -1
 
 extern fgetc
 extern fputc
-extern rewind
 
 section	.text
-global writeT
+global d_write
 
+d_write:
 writeT:
-	push DWORD[ebp+8]
-	call rewind
-	pop eax	
-
 	push DWORD 0		; EBP-4 = busyOutput
 	push DWORD 0		; EBP-8  = lastFullReg
 	push DWORD 0		; EBP-12 = emptyThis
@@ -89,7 +85,7 @@ write_loop:
 copy:
 	mov eax, [ebp-16];i
 	mov ebx, [ebp-8] ;lastFullReg
-	cmp al, bl 
+	cmp ebx, eax
 	je copy_end
 ;		code_reg = codes[i*(4or8)];
 	mov ebx, [ebp+20];codes

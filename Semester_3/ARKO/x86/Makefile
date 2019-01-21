@@ -18,7 +18,11 @@ writeHeader.o: writeHeader.asm
 	$(ASM) $(AFLAGS) -g $? 
 write.o: write.asm
 	$(ASM) $(AFLAGS) -g $? 
-result: main.o count.o huffman.o createCodes.o writeHeader.o write.o
+d_codes.o: d_codes.asm
+	$(ASM) $(AFLAGS) -g $?
+d_write.o: d_write.asm
+	$(ASM) $(AFLAGS) -g $?
+result: main.o count.o huffman.o createCodes.o writeHeader.o write.o d_codes.o d_write.o
 	$(CC) $(CFLAGS) $? -o result
 clean: 
 	rm *.o

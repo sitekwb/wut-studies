@@ -21,7 +21,6 @@ writeHeader:
 	push DWORD[ebp+12]	; EBP-4  = tab[sign]
 	push DWORD 0		; EBP-8  = sign
     	push DWORD[ebp+20]	; EBP-12 = codes
-	push DWORD[ebp+16]	; EBP-16 = outputFile
 ; for(char code: codes){
 lop:
 	mov eax, [ebp-8];sign
@@ -36,28 +35,38 @@ lop:
 	jz loop_next
 ;		outputFile << sign << bitcountincode << code;
 ;sign
+	push ecx		; EBP-16 = bitcountincode
+	push DWORD[ebp+16]	; outputFile
 	push ecx	;bitcountincode
 	call fputc
+	pop ecx
+	pop ecx
 ;bitcountincode	
-	mov eax, [ebp-8];sign
-	mov ebx, [ebp-20];bcic
-	mov [ebp-8], ebx;bcic temp in sign_stack
-	mov [ebp-20], eax;sign
+	push DWORD[ebp+16]	; outputFile
+	push DWORD[ebp-8];sign
 	call fputc
+	pop ecx
+	pop ecx
 ;code
-	mov eax, [ebp-20];sign
-	mov ecx, [ebp-8];bcic
-	mov [ebp-8], eax;sign
+	mov eax, [ebp-8];sign
+	mov ecx, [ebp-16];bcic
 	shr ecx, 3	;fullbytecountincode
 	inc ecx		;fbcic+1
-	mov [ebp-20], ecx
+	mov [ebp-16], ecx
+	
+	push DWORD[ebp+16]	; outputFile
+	push ecx	;count
 	push DWORD 1	;size
-	push DWORD[ebp-12];&code
+	mov ecx, ebp
+	sub ecx, 12
+	push ecx;ptr
 	call fwrite
-
-	pop ebx;&code
+	pop ebx;ptr
 	pop ebx;size
-	pop eax;sign = EBP-20
+	pop ebx;count
+	pop ebx;file
+
+	pop ebx;bitcountincode
 loop_next:
 	mov eax, [ebp-8];getSign()
 	inc eax		;sign++
@@ -76,15 +85,22 @@ loop_next:
 epilog:
 
 ; outputFile << (short)0;
+	
+	push DWORD[ebp+16]	; outputFile
 	push DWORD 0
 	call fputc
+	pop eax
+	pop eax
+	
+	push DWORD[ebp+16]	; outputFile
+	push DWORD 0
 	call fputc
+	pop eax
+	pop eax
 
-	pop eax;-20
-	pop eax;-16
 	pop eax;-12
 	pop eax;-8
-
+	pop eax;-4
 		
 	jmp writeT 
 ;============================================
