@@ -18,9 +18,11 @@ do
 	
 	echo "->PUTTING $file"
 	./xput $file
-	./xinfo
-	sleep 1
 done
+
+./xlsdisk
+./xinfo
+sleep 3
 
 echo "---------------DELETING HALF OF FILES---------------"
 k=`expr $1 / 2`
@@ -40,7 +42,7 @@ echo "--------------GETTING FILE-------------------------"
 file="file$number"
 target="x$file"
 ./xget $file $target
-echo -n "->DIFF: "
+echo "->DIFF: "
 diff $file $target
 
 echo "---------------DEFRAGMENTATING---------------------"
@@ -51,12 +53,10 @@ echo "--------------GETTING FILE-------------------------"
 file="file$number"
 target="x$file"
 ./xget $file $target
-echo -n "->DIFF: "
+echo "->DIFF: "
 diff $file $target
 
 echo "--------------DELETING DISK AND FILES------------------------"
 ./xrmdisk
-rm file*
-echo ->LIST OF FOLDER
-ls -al
+rm file* xfile*
 echo "->END"
