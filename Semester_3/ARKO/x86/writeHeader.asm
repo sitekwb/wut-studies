@@ -37,13 +37,13 @@ lop:
 ;sign
 	push ecx		; EBP-16 = bitcountincode
 	push DWORD[ebp+16]	; outputFile
-	push ecx	;bitcountincode
+	push DWORD[ebp-8];sign
 	call fputc
 	pop ecx
 	pop ecx
 ;bitcountincode	
 	push DWORD[ebp+16]	; outputFile
-	push DWORD[ebp-8];sign
+	push DWORD[ebp-16]	;bitcountincode
 	call fputc
 	pop ecx
 	pop ecx
@@ -52,14 +52,11 @@ lop:
 	mov ecx, [ebp-16];bcic
 	shr ecx, 3	;fullbytecountincode
 	inc ecx		;fbcic+1
-	mov [ebp-16], ecx
 	
 	push DWORD[ebp+16]	; outputFile
 	push ecx	;count
 	push DWORD 1	;size
-	mov ecx, ebp
-	sub ecx, 12
-	push ecx;ptr
+	push DWORD[ebp-12];codes_ptr
 	call fwrite
 	pop ebx;ptr
 	pop ebx;size
@@ -68,16 +65,16 @@ lop:
 
 	pop ebx;bitcountincode
 loop_next:
-	mov eax, [ebp-8];getSign()
-	inc eax		;sign++
-	mov [ebp-8], eax;save sign
+	mov eax, [ebp-8];sign
+	inc eax		;++
+	mov [ebp-8], eax
 
 	mov ebx, [ebp-4];tab[sign]
-	add ebx, 8
+	add ebx, 8	;+=8
 	mov [ebp-4], ebx
 
 	mov ebx, [ebp-12];codes
-	add ebx, 32
+	add ebx, 32	 ;+=32
 	mov [ebp-12], ebx
 	
 	jmp lop
